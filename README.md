@@ -12,10 +12,13 @@ DSH 技能分组仓：**self-ue**
 - `unreal-blueprint-to-cpp-project`
 - `unreal-button-migration-checklist`
 - `unreal-class-migration-bridge`
+- `unreal-cmd`
 - `unreal-code-created-widget-pitfalls`
 - `unreal-commonui-button-dev`
 - `unreal-create-project-starter-content`
 - `unreal-dev`
+- `unreal-dev-http`
+- `unreal-dev-umg`
 - `unreal-editor-toolbar-button`
 - `unreal-featurepack-upack-rebuild`
 - `unreal-fix-simulatedproxy-teleport-interpolation`
@@ -42,3 +45,10 @@ DSH 技能分组仓：**self-ue**
 - `unreal-vr-mouse-debug-click`
 
 由 `dsh-extensions/install-skill.sh` 软链进 `~/.dsh/skills/`。
+
+## 迁入记录
+
+- `unreal-cmd`、`unreal-dev-http`、`unreal-dev-umg`：原属 `unknown-opencode-pack` 分组仓
+  （来源不明的 opencode 技能包，2026-09-13 迁入本组，该组连同其 GitHub 远端一并删除）。
+  三者 frontmatter 里残留的 `compatibility: opencode` / `license: MIT` 是该来源的痕迹，
+  判断技能出身时以这些键为准，别被 `author` 字段误导（见 MyAI `docs/adr/0006`）。
