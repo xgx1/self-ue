@@ -22,7 +22,7 @@ description: UE 5.7 创建新项目并添加 Starter Content（GUI 自动化 + U
 ```powershell
 & 'C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealPak.exe' `
   'C:\Program Files\Epic Games\UE_5.7\FeaturePacks\StarterContent.upack' `
-  -Extract 'C:\Users\Admin\Documents\Unreal Projects\<项目名>\Content\StarterContent'
+  -Extract '~\Documents\Unreal Projects\<项目名>\Content\StarterContent'
 ```
 - **必须用 `-Extract <目录>`**；`-ExtractTo=` 会被当创建 pak 模式报 "File already exists" 失败
 - 结果：267 文件 / 10 子文件夹（Architecture, Audio, Blueprints, HDRI, Maps, Materials, Particles, Props, Shapes, Textures）
