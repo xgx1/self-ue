@@ -5,6 +5,8 @@ description: UE 5.7 MRQ 全景录制+VR 回放（APanoramaViewer+MediaTexture，
 
 # UE 5.7 MRQ 全景录制与回放（安装版引擎实测）
 
+> **平台约定**：本机主力环境是 Linux（Arch）——命令以 bash 为先、可直接执行；Windows 专属步骤一律收进「Windows（PowerShell）」小节，不在 Linux 段落里混用。
+
 ## 5.7 关键差异：Panoramic Capture 已移除
 
 5.7 中旧式 MRQ「添加设置 → Panoramic Capture」（UMoviePipelinePanoramicPass）**不存在**。全景 = Movie Graph 渲染图节点 `UMovieGraphDeferredPanoramicNode`（模块 MovieRenderPipelineRenderPasses，UI 名 Deferred Panoramic）。
@@ -55,6 +57,7 @@ if (!RenderLayerNode) { continue; }
 
 ### 视频编码（必踩）
 - **必须 H.264**（libx264 + yuv420p）：x265/HEVC 在 Windows Media Foundation（UE 播放器底层）无解码器 → 加载失败；系统播放器能放但 UE 不能 = 编码问题
+  - **Linux 侧**：UE 不走 WMF（`WmfMedia` 的模块 `PlatformAllowList` 只有 `Win64`——本机引擎检出 `Engine/Plugins/Media/WmfMedia/WmfMedia.uplugin` 实证），Linux 上解码走跨平台 Electra 播放器（`ElectraPlayer` 的 `PlatformAllowList` 含 `Linux`）。**「必须 H.264」这条结论在 Linux 上是否同样成立待验证**（本技能未在 Linux 实测 HEVC 播放）；无脑跟 H.264 最稳，不建议为省事先试 x265
 - 8K 需 `-profile:v high -level 6.0`
 - FileMediaSource `file_path` 用**绝对路径**（相对路径 `./Movies/...` 可能解析失败）
 
@@ -67,7 +70,33 @@ if (!RenderLayerNode) { continue; }
 
 ## VR 打包（OpenXR/SteamVR）
 
+### 系统 OpenXR ActiveRuntime 指向
+
+#### Windows（PowerShell）
 - 系统 OpenXR ActiveRuntime 已指向 SteamVR（`HKLM\SOFTWARE\Khronos\OpenXR\1\ActiveRuntime`）→ 项目零配置；uproject 启用 OpenXR 插件即可；`DefaultEngine.ini` `[/Script/Engine.Engine] bStartInVR=True` 启动进 VR
+- 确认当前指向：
+  ```powershell
+  Get-ItemProperty 'HKLM:\SOFTWARE\Khronos\OpenXR\1' -Name ActiveRuntime
+  ```
+
+#### Linux（bash）
+Linux 上无对应方案：没有注册表，OpenXR loader 改为按环境变量 / XDG 配置查找 active runtime（机制实证：本机引擎 `Engine/Binaries/ThirdParty/OpenXR/linux/x86_64-unknown-linux-gnu/libopenxr_loader.so` 内含 `XR_RUNTIME_JSON`、`openxr/` + `/active_runtime.json`、`XDG_CONFIG_HOME`、`XDG_CONFIG_DIRS` 字符串）。可替代做法：
+
+```bash
+# 1) 显式指定 runtime manifest（最直接、优先于配置文件）
+export XR_RUNTIME_JSON="<path-to-runtime-manifest>.json"
+
+# 2) 或看 loader 默认会读的 active runtime 文件
+cat "${XDG_CONFIG_HOME:-$HOME/.config}/openxr/1/active_runtime.json"
+
+# 3) 找不到 manifest 时先在磁盘上定位
+find "$HOME" /usr/share -iname "*openxr*.json" 2>/dev/null | head
+```
+
+uproject 启用 OpenXR 插件、`DefaultEngine.ini` `[/Script/Engine.Engine] bStartInVR=True` 这两条与平台无关，Linux 同样适用。
+
+**待验证**：SteamVR 在 Linux 下的 runtime manifest 具体路径/文件名（常见命名 `steamxr_linux64.json`，本技能未在 Linux 实测）——按上面第 3 条 find 出真实路径后再 export，别照抄。
+
 - **OpenXR 启动可能仍不建 session**（日志只有 `Initialized OpenXR on SteamVR` 无 `xrCreateSession`）
 - **强制修复**：代码里 `GEngine->XRSystem->GetStereoRenderingDevice()->EnableStereo(true)`（IStereoRendering，include StereoRendering.h + IXRTrackingSystem.h，依赖 HeadMountedDisplay 模块）
 - 渲染优化（全景播放）：`bForwardShading=True` + `MSAACount=4` + 关 `r.RayTracing`/`r.Lumen.HardwareRayTracing`/`r.DynamicGlobalIlluminationMethod=0`/`r.VolumetricFog=0`/`r.Shadow.Virtual.Enable=0`（Unlit 球用不到，省 GPU）
@@ -78,7 +107,20 @@ if (!RenderLayerNode) { continue; }
 引擎 FeaturePacks/ 缺 StarterContent.upack 时启动导入失败弹窗：
 - 从项目现有资产打包：响应文件每行 `"源文件绝对路径" "../../../ProjectName/Content/相对路径"`（挂载点须含 `/Content/`，UPackFactory 按此解析导入目标）
 - **响应文件不能有注释行**（`;` 开头）→ UnrealPak 索引断言崩溃
-- 打包：`UnrealPak.exe out.upack -Create=response.txt`；验证：`-List` 看挂载点
+- 打包与验证（引擎根 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`，注意 `/home/sx/UnrealEngine` 只是链了部分目录的入口；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`）
+
+### Linux（bash）
+```bash
+export UE_ROOT=/home/sx/projects/unrealengine/ue5.8
+"$UE_ROOT/Engine/Binaries/Linux/UnrealPak" out.upack -Create=response.txt   # 打包
+"$UE_ROOT/Engine/Binaries/Linux/UnrealPak" out.upack -List                  # 验证挂载点
+```
+
+### Windows（PowerShell）
+```powershell
+& 'C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealPak.exe' out.upack -Create=response.txt
+& 'C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealPak.exe' out.upack -List
+```
 - 注意：AddContentDialog 读 JSON manifest，自制 upack 会报 `Cannot find manifest`（仅"添加内容"面板，不弹启动窗，可忽略）；启动导入（UPackFactory）只看挂载点，正常成功
 
 ## 无头脚本通用坑（复用）
@@ -90,4 +132,20 @@ if (!RenderLayerNode) { continue; }
 - hasattr 对 UPROPERTY 误报 False/True 都不可靠，用 get_editor_property try/except
 - MovieGraph 资产在 python 无 get_graph()——用 get_branch_names/get_node_for_branch 遍历替代
 - 渲染被 PIE 结束打断会截断输出（日志 "PIE Ended while Movie Pipeline was still active"）
-- 无头调用包装：Start-Process UnrealEditor-Cmd `-run=pythonscript -script=` + `-unattended -nop4 -nosplash -NullRHI -stdout -FullStdLogOutput -abslog` + 300s 超时，stdout/stderr 分文件
+- 无头调用包装（`-run=pythonscript -script=` + `-unattended -nop4 -nosplash -NullRHI -stdout -FullStdLogOutput -abslog` + 300s 超时，stdout/stderr 分文件）：
+
+### Linux（bash）
+```bash
+export UE_ROOT=/home/sx/projects/unrealengine/ue5.8
+timeout 300 "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd" <Project>.uproject \
+  -run=pythonscript -script=<py> -unattended -nop4 -nosplash -NullRHI \
+  -stdout -FullStdLogOutput -abslog=<log> >out.txt 2>err.txt
+```
+
+### Windows（PowerShell）
+```powershell
+# 300s 超时在调用方（看门狗）控制，Start-Process -Wait 自身不设超时
+Start-Process 'C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor-Cmd.exe' `
+  -ArgumentList '<Project>.uproject','-run=pythonscript','-script=<py>','-unattended','-nop4','-nosplash','-NullRHI','-stdout','-FullStdLogOutput','-abslog=<log>' `
+  -RedirectStandardOutput out.txt -RedirectStandardError err.txt -Wait
+```

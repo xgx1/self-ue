@@ -89,6 +89,20 @@ unreal.EditorAssetLibrary.save_asset(path, only_if_is_dirty=True)
 - SimulateClick → HandleButtonClicked → Broadcast OnXxxButtonClicked。
 - 世界空间 UI 点击：DebugMouseClick 的 `CollectXxxButtonsRecursive`（手动 UPanelWidget Slot 递归，比 GetAllWidgets/ForWidgetAndChildren 可靠——ForWidgetAndChildren 连设计时按钮都遍历不到）。
 
+## BindWidget 类型变更（如 UListView → UScrollBox）⚠️
+
+改了 C++ 里 `BindWidget` 成员的类型后，Widget Blueprint 不会自动跟上，必须手工同步：
+
+1. 打开受影响的 Widget Blueprint
+2. 删掉旧控件，加一个**同名**的新类型控件
+3. Compile + Save
+4. 重新编译 C++、重新打包
+
+常见报错：
+
+- `未找到类型 XXX 的必需控件绑定`——WBP 控件类型与 C++ BindWidget 不匹配
+- `Internal Compiler Error: Tried to create a property`——同一类型冲突的另一种表现
+
 ### 相关
 - 头顶昵称：PlayerState->PlayerDisplayName 默认 "Player" 从未设置 → VRPlayerController::HandleProfileUpdated 里 Server_SetPlayerDisplayName RPC 传播后端 DisplayName（昵称=用户 ID）。
 - 后端 400：JSON body 的 bool 别用 SetStringField 发 "true"，用 SetBoolField（MakeSingleFieldJsonBodyBool）。

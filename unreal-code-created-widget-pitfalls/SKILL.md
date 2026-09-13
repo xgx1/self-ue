@@ -22,5 +22,27 @@ description: UE 项目 C++ 代码动态创建 UMG/CommonUI 按钮与弹窗时的
 **根因**：测试用 NewObject 创建 widget（未经 Initialize），WidgetTree 为 null。
 **修法**：创建条件加 `&& WidgetTree` 守卫。运行时/WBP 路径 WidgetTree 恒非空（UUserWidget::Initialize 先于 NativeConstruct），行为不变。
 
+## 陷阱 4：UI 输入模式没切回来，关掉界面后 Pawn 失控
+
+- `FInputModeUIOnly`：完全禁用游戏输入，只留 UI
+- `FInputModeGameAndUI`：UI 优先、游戏输入同时可用——**打开 UI 时推荐用这个**（只切 UIOnly 会导致关 UI 后 Pawn 无法操控）
+- `FInputModeGameOnly`：关闭 UI 后恢复游戏输入
+
+```cpp
+// 打开 UI
+bShowMouseCursor = true;
+FInputModeGameAndUI InputMode;
+InputMode.SetWidgetToFocus(UIWidget->TakeWidget());
+InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+InputMode.SetHideCursorDuringCapture(false);
+SetInputMode(InputMode);
+
+// 关闭 UI
+bShowMouseCursor = false;
+SetInputMode(FInputModeGameOnly());
+```
+
+映射上下文要同步切换：打开 UI 时移除 UI 相关 IMC（或调优先级），关闭时**先 Remove 再 Add** 确保状态正确——细节见 `unreal-imc-mapping-verify`。
+
 ## 验证
 改完跑对应模块的 Contract/State 自动化测试（如 <Project>：`Automation RunTests <Project>.Social.ProfileCard`）。

@@ -486,6 +486,31 @@ Most build errors fall into a few categories: **LNK2019** (missing dependency or
 
 ---
 
+## Rename Check, Build Errors, and Serialization Recovery
+
+### After renaming a variable or function in a header
+
+1. Search every `.cpp`/`.h` for the **old** name before compiling. The usual misses are: constructor initializer lists, `AddMappingContext()`/`RemoveMappingContext()` calls, `BindAction()` calls, and the implementation blocks directly under the includes.
+2. Then compile — a stale reference surfaces as `C2065: undeclared identifier`, and the fix is always "find the remaining reference", not "add a declaration".
+
+### Build error quick table
+
+| Error | Cause | Fix |
+|---|---|---|
+| `C2065 undeclared identifier` | a `.cpp` still references the old name after a rename | re-search and update every reference |
+| `LNK2001/LNK2019 unresolved external symbol` | declaration in `.h` without an implementation in `.cpp` (or the reverse), or a missing `MODULENAME_API` | make declaration and definition match; export the symbol |
+| class definition not found / incomplete type | missing `#include` or forward declaration | add the include or forward declaration |
+
+### Blueprint serialization failure after changing a C++ class
+
+Symptom: `LowLevelFatalError: ObjectSerializationError: Bad export index` after adding a `UPROPERTY` or a multicast delegate to a C++ class.
+
+Recovery: delete `Intermediate/`, `DerivedDataCache/` and `Saved/Cooked/`; fully restart the editor; open every affected Blueprint, compile and save it; rebuild C++; repackage.
+
+Prevention: test in the editor right after changing a C++ class. Adding functions alone usually does not trigger it — adding member variables does.
+
+---
+
 ## Related Skills
 
 - **ue-cpp-foundations** — UObject macros (UCLASS, UPROPERTY, UFUNCTION), reflection, and what must be in public headers for UHT to process

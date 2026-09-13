@@ -143,6 +143,6 @@ UE native HTTP 不受浏览器 CORS 限制，通常不需要 CORS 才能调用�
 
 ## 与其他 Unreal skills 的关系
 
-* 普通 UE C++、输入、蓝图序列化问题仍按 `unreal-dev`。
-* UMG 资产自动搭建仍按 `unreal-dev-umg`。
+* 普通 UE C++ 与蓝图序列化问题按 `unreal-cpp-foundations` / `unreal-module-build`；输入与 IMC 问题按 `unreal-imc-mapping-verify`。
+* UMG 资产的自动搭建/手术走官方 MCP，按 `unreal-official-mcp-surgery`（无头 Python 一族的技能已于 2026-09-13 退役删除）。
 * 只要 UMG 或 gameplay 需要 HTTP backend，就同时参考本 skill。

@@ -5,19 +5,56 @@ description: UE5 源码引擎交叉编译 Linux Server + unrealcli 部署：Linu
 
 # UE Linux Server 交叉编译 + 远程部署
 
-Windows 源码引擎构建 Linux Server 并部署到远程（`<RemoteIP>` 实证，2026-08-05）。占位符约定：`<Project>` = 项目名（如 `<Project>.uproject`、`<Project>Server` 目标名），`<project>` = 小写项目名（路径与 PM2 进程名用），`<RemoteIP>` = 远程服务器 IP，`<user>` = 远程非 root 运行用户。
+> **平台约定**：本机主力环境是 Linux（Arch）——命令以 bash 为先、可直接执行；Windows 专属步骤一律收进「Windows（PowerShell）」小节，不在 Linux 段落里混用。
+
+**两条路径，先选一条**（原文没有断言「只能在 Windows 上交叉编译」；第 1 节的整套 `LINUX_MULTIARCH_ROOT` 机制是「Windows 主机 → Linux 目标」这条交叉编译路径专用的）：
+
+- **A. Linux 本机原生构建（当前主力）**：本机 Arch + 源码引擎直接 `Build.sh <Project>Server Linux <Config>`，不需要 `LINUX_MULTIARCH_ROOT`、不需要交叉工具链、不需要 Windows；产物就是本机 Linux 二进制，第 4 节起的远程部署照旧。见各节 **Linux（bash）**。
+- **B. Windows 交叉编译（历史路径，保留）**：Windows 源码引擎构建 Linux Server 并部署到远程（`<RemoteIP>` 实证，2026-08-05）。见各节 **Windows（PowerShell）**。
+
+占位符约定：`<Project>` = 项目名（如 `<Project>.uproject`、`<Project>Server` 目标名），`<project>` = 小写项目名（路径与 PM2 进程名用），`<RemoteIP>` = 远程服务器 IP，`<user>` = 远程非 root 运行用户。引擎根用 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`（UE 5.8；`/home/sx/UnrealEngine` 只是链了部分目录的入口，脚本里的 `dirname $0/../../..` 会算错引擎根，**请用真实路径**）。
+
+工具链版本以 `"$UE_ROOT/Engine/Config/Linux/Linux_SDK.json"` 的 `MainVersion` 为准（本机当前 `v26_clang-20.1.8-rockylinux8`）——下文出现的 `v25_clang-18.1.0-rockylinux8` 是当时 Windows 侧的记录，别照抄。
 
 ## 1. Linux SDK（工具链）
 
-- **环境变量名必须是 `LINUX_MULTIARCH_ROOT`**（UBT 只认这个；`LINUX_MULTIARCH_TOOLS` 无效）。指向工具链根（如 `C:\UnrealToolchains\v25_clang-18.1.0-rockylinux8`），UBT 期望 `{root}/bin/clang++.exe`（x86_64-unknown-linux-gnu 子目录）。
-- **User 级变量对已开终端无效**——必须在同一命令内 `export LINUX_MULTIARCH_ROOT=...` 再跑 Build.bat。
+### Windows（PowerShell）— 交叉编译路径
+
+- **环境变量名必须是 `LINUX_MULTIARCH_ROOT`**（UBT 只认这个；`LINUX_MULTIARCH_TOOLS` 无效）。指向工具链根（如 `C:\UnrealToolchains\v25_clang-18.1.0-rockylinux8`），UBT 期望 `{root}/bin/clang++.exe`（x86_64-unknown-linux-gnu 子目录；`.exe` 后缀只在 Windows 主机上成立）。
+- **User 级变量对已开终端无效**——必须在同一命令内设好再跑 Build.bat：
+  ```powershell
+  $env:LINUX_MULTIARCH_ROOT = 'C:\UnrealToolchains\v25_clang-18.1.0-rockylinux8'
+  & 'C:\Program Files\Epic Games\UE_5.7\Engine\Build\BatchFiles\Build.bat' <Project>Server Linux DebugGame -Project=<...> -WaitMutex -FromMSBuild
+  ```
 - 版本查 `Engine/Config/Linux/Linux_SDK.json`（如 v25_clang-18.1.0-rockylinux8）。
 - AutoSDK 不在 GitDeps 清单——Setup.bat 交互下载（Epic 凭据）或手动下载解压。
 - **工具链缺失症状**：`Engine/Extras/ThirdPartyNotUE/SDKs` 目录为空（本机实测被清理过）→ 构建报 `Platform Linux is not a valid platform to build` / `Unable to find valid SDK(s) for Linux: Required=v25_clang-18.1.0-rockylinux8`。
 - **下载安装**：CDN 不可用 curl 内联（被工具拦截），用 eval/Bun fetch 写文件：`https://cdn.unrealengine.com/CrossToolchain_Linux/v25_clang-18.1.0-rockylinux8.exe`（946MB）。静默安装 `Start-Process -FilePath 'xxx.exe' -ArgumentList '/S' -Wait`（7z 不识别该 PE 安装器；默认装到 `C:/UnrealToolchains/v25_clang-18.1.0-rockylinux8/`）。
 - **验证构建**：`Build.bat <Project>Server Linux DebugGame -Project=... -WaitMutex -FromMSBuild`（~2 分钟，clang 18.1.0 加载日志确认）。
 
+### Linux（bash）— 本机原生构建
+
+本机原生构建**不必设** `LINUX_MULTIARCH_ROOT`：UBT 未读到该变量时回退到 **in-tree SDK**（源码实证 `Engine/Source/Programs/UnrealBuildTool/Platform/Linux/LinuxPlatformSDK.cs::GetSDKLocation()`），路径为
+
+`$UE_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/<MainVersion>/x86_64-unknown-linux-gnu`
+
+`<MainVersion>` 取自 `Engine/Config/Linux/Linux_SDK.json`。Linux 主机上 clang 可执行名是 `bin/clang++`（`.exe` 后缀只对 Windows 主机——同文件 `IsValidClangPath()`）。
+
+```bash
+export UE_ROOT=/home/sx/projects/unrealengine/ue5.8        # 真实路径，别用 /home/sx/UnrealEngine 入口
+cat "$UE_ROOT/Engine/Config/Linux/Linux_SDK.json"          # 看 MainVersion（本机当前 v26_clang-20.1.8-rockylinux8）
+"$UE_ROOT/Engine/Build/BatchFiles/Linux/SetupToolchain.sh" # in-tree SDK 缺失时：按 Linux_SDK.json 下载解包到上面的路径
+```
+
+- **工具链下载（Linux 侧等价物）**：`SetupToolchain.sh` 取 `https://cdn.unrealengine.com/Toolchain_Linux/native-linux-<MainVersion>.tar.gz` 解到 `Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/`；脚本自身需要 `curl` 或 `wget`，缓存目录基于 `GIT_DIR`（脚本内自述）。
+- **对照原文的「下载安装」**：那条 `CrossToolchain_Linux/*.exe`（946MB）+ `Start-Process /S` 是 **Windows 交叉工具链的自解压 PE 安装器** —— Linux 上无对应方案：Linux 不跑 PE 安装器；可替代做法 = 上面的 `SetupToolchain.sh`（原生 Linux 工具链 tar.gz 通道）。
+- **AutoSDK**：`Setup.bat`（Windows 批处理）在 Linux 侧不适用；源码版引擎用 `SetupToolchain.sh`，或手动下载同一个 tar.gz 解到同一路径。
+- **工具链缺失症状**：与 Windows 侧同款——`Engine/Extras/ThirdPartyNotUE/SDKs` 为空时构建报 `Platform Linux is not a valid platform to build` / `Unable to find valid SDK(s) for Linux: Required=<MainVersion>`。
+- **验证构建**：见第 3 节「Linux（bash）」。
+
 ## 2. BuildConfiguration.xml
+
+### Windows（PowerShell）
 
 `%APPDATA%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml`，**根元素 `<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">`**（`<BuildConfiguration>` 报错；缺 xmlns 报 namespace 错）：
 
@@ -27,17 +64,48 @@ Windows 源码引擎构建 Linux Server 并部署到远程（`<RemoteIP>` 实证
 </Configuration>
 ```
 
-`bAllowUBALocalExecutor=false` 禁用 UBA 本地执行器（构建失败/慢时；KB5058499/UbaDetours 已知问题）。
+### Linux（bash）
+
+路径不同（UBT 源码 `Configuration/Xml/XmlConfig.cs::InputFiles` 实证：这些位置经 .NET `Environment.SpecialFolder` 解析，**没有平台分支**）：
+
+- **推荐（源码版引擎）**：`"$UE_ROOT/Engine/Saved/UnrealBuildTool/BuildConfiguration.xml"` —— 源码里标了「缺失时自动创建」，最稳。
+- 逐用户：`~/.config/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml`（.NET 在 Unix 上把 `ApplicationData` 映射到 `$XDG_CONFIG_HOME`，默认 `~/.config`）
+- 系统级：`/usr/share/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml`
+
+```bash
+export UE_ROOT=/home/sx/projects/unrealengine/ue5.8
+CFG="$UE_ROOT/Engine/Saved/UnrealBuildTool/BuildConfiguration.xml"
+mkdir -p "$(dirname "$CFG")"
+cat > "$CFG" <<'EOF'
+<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+    <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+</Configuration>
+EOF
+```
+
+**待验证**：`~/.config/...` 与 `/usr/share/...` 两条是按 .NET SpecialFolder 映射推出来的，未在 Linux 实跑确认；不确定就用 `Engine/Saved/...` 那条。同理，`bAllowUBALocalExecutor=false` 的成因（KB5058499/UbaDetours）是 **Windows 侧已知问题**，Linux 上是否同样需要关 UBA **待验证**——非必要先别关。
 
 ## 3. 构建
 
+### Linux（bash）
 ```bash
-export LINUX_MULTIARCH_ROOT="C:\UnrealToolchains\v25_clang-18.1.0-rockylinux8"
-".../Build.bat" <Project>Server Linux Development -Project=... -WaitMutex -FromMSBuild
+export UE_ROOT=/home/sx/projects/unrealengine/ue5.8
+"$UE_ROOT/Engine/Build/BatchFiles/Linux/Build.sh" <Project>Server Linux Development \
+  -Project="$PWD/<Project>.uproject" -WaitMutex -FromMSBuild
+```
+本机原生构建，无 `LINUX_MULTIARCH_ROOT`。大构建量级参考：约 30 分钟（979 目标）。
+
+### Windows（PowerShell）
+```powershell
+$env:LINUX_MULTIARCH_ROOT = 'C:\UnrealToolchains\v25_clang-18.1.0-rockylinux8'
+& 'C:\Program Files\Epic Games\UE_5.7\Engine\Build\BatchFiles\Build.bat' `
+  <Project>Server Linux Development -Project=<...> -WaitMutex -FromMSBuild
 ```
 约 30 分钟（979 目标）。
 
 ## 4. 远程部署（unrealcli deploy remote）
+
+**平台说明**：从本节起，命令全部跑在**远程 Linux 服务器**上（`ssh <user>@<RemoteIP>` 之后的 bash），本机是 Windows 时同样如此——这些步骤本来就只在 Linux 侧执行，没有 PowerShell 版本。本机（Arch）可直接复制执行。
 
 - **配置**：`config/main.toml` `[deploy] production_ip / production_user`（不是 `[remote]`/`ssh_user`；键名必须精确，RemoteAppRoot 自动 = /opt/<project>）。
 - **后端 net10**：远程需 `apt-get install -y aspnetcore-runtime-10.0`（否则启动报 Framework 10.0.0 缺失）。
@@ -51,7 +119,7 @@ export LINUX_MULTIARCH_ROOT="C:\UnrealToolchains\v25_clang-18.1.0-rockylinux8"
   exec sudo -u <user> /bin/sh /opt/<project>/ue-server/<Project>Server.sh -port=7777 -log -unattended -NoSound -NullRHI
   ```
   sudo 直接执行脚本报 command not found——**必须 /bin/sh 显式**。
-- **验证**：`ss -ulnp | grep 7777`（UDP——`ss -tlnp` 看不到）；5021 用 `Test-NetConnection`。
+- **验证**：`ss -ulnp | grep 7777`（UDP——`ss -tlnp` 看不到）；5021（TCP）用 `ss -tlnp | grep 5021`（Linux，远程/本机皆可）——Windows 侧的等价物是 `Test-NetConnection <RemoteIP> -Port 5021`。
 - 远程服务器内部 HTTP 指向旧 IP 会降级 mock——不影响端口连通。
 
 ## 5. 服务器版本验证

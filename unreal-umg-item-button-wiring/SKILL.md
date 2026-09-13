@@ -65,3 +65,41 @@ void HandleBlockClicked()
 ## Notes
 - Avoid SWAP edit for inserting UPROPERTY blocks — always use INS.POST or rewrite the full section. SWAP eats adjacent declarations.
 - For "暂无功能" buttons, just log and return.
+
+## Decoupling UI from gameplay with multicast delegates
+
+An item/widget action button should not call gameplay systems (or the PlayerController) directly. Declare a dynamic multicast delegate on the widget, broadcast it where the action happens, and let the owner subscribe — the widget stays reusable, and the gameplay side stays testable.
+
+```cpp
+// .h — on the widget
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSettingsClosed);
+
+UCLASS()
+class XXX_API UMySettingsUI : public UUserWidget
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable, Category = "Settings")
+    FOnSettingsClosed OnSettingsClosed;
+};
+
+// .cpp — broadcast at the action site
+void UMySettingsUI::CloseSettings()
+{
+    OnSettingsClosed.Broadcast();
+    RemoveFromParent();
+}
+
+// owner side — bind after creating the widget
+SettingsWidget = CreateWidget<UMySettingsUI>(GetWorld(), SettingsWidgetClass);
+if (SettingsWidget)
+{
+    SettingsWidget->OnSettingsClosed.AddDynamic(this, &AMyPlayerController::OnSettingsUIClosed);
+    SettingsWidget->AddToViewport();
+}
+```
+
+Notes:
+- `AddDynamic` requires the handler to be a `UFUNCTION()`; a plain member function gives a compile error or a runtime crash.
+- `BlueprintAssignable` keeps the same event usable from Blueprints; drop it if only C++ binds.
+- The same shape works for list items: broadcast per-item events up to the list widget, which re-emits them for the owning screen (see the forwarding pattern above).

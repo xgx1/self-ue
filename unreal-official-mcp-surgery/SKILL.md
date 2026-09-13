@@ -51,3 +51,15 @@ description: "在运行中的 UE 编辑器里用官方 ModelContextProtocol 工�
 - API 差异速记：`GetWidgetFromName` 属 UUserWidget 不属 UWidget；`FReply::DetectDrag` 非静态；蓝图事件图实现了 `OnDragDetected`/`OnMouseButtonDown` 会覆盖 C++ Native 版——迁移时删蓝图图。
 - 场景点位/触发器点击：`AActor::OnClicked` 委托（引擎原生点击，PlayerController 需 `bEnableClickEvents`）+ BoxComponent 对 Visibility 通道 Block；范围触发用 `OnActorBeginOverlap` + 判 `OtherActor->IsA<APawn>()`。
 - 排查二分法：**构造日志**（对象创建了吗）→ **命中日志**（按下到了吗）→ **处理日志**（逻辑跑了吗）；运行时日志序列优先于代码推理，设计器树与运行时 Snapshot 比对定位层叠/可见性问题。
+
+## 为什么资产/UMG 手术一律优先走 MCP（2026-09-13 定调）
+
+原「无头 UE Python（`-run=pythonscript`）」一族技能已全部退役删除：`unreal-dev-umg`、`unreal-python-headless-probe`、`unreal-headless-asset-creation`、`unreal-headless-input-asset-setup`、`unreal-headless-media-assets`、`unreal-pico-input-imc-headless-surgery`，以及上游的 `unreal-python`。它们不是"还有用只是没整理"，而是实测有硬伤——凡本技能的 MCP 工具集能覆盖的操作，**不要再回去写无头 Python**：
+
+- **"跑成功" ≠ 资产已改**：`set_editor_property("mappings", …)` 这类数组写入进程内读回是对的，**保存时不序列化**，磁盘不变；`map_key()` 对同 action 已存在的冲突键静默失败。
+- **读值不可信**：`get_editor_property` 对编辑器属性 `hasattr` 会误报 `False`。
+- **输出被吞**：无头模式 stdout 常被吞，脚本必须自己写结果文件才能取回返回值。
+- **编辑器状态不可见**：UMG 截图黑屏三连坑的**唯一正解是用 MCP 的 SlateInspector 读控件树**，不是换截图姿势。
+- **测试抢帧**：`Automation RunTests` 在无头下抢不到帧，需要自定义 commandlet。
+
+职责边界：**资产/UMG 手术 → 本技能（MCP）**；构建、Cook、打包、跑自动化测试这类命令行活儿 → `unreal-cmd` / `unreal-run-automation-tests`。无头 python 只在 MCP 没有对应工具、且上面五条坑都能绕开时才作为兜底。
