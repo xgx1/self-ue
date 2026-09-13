@@ -10,7 +10,6 @@ DSH 技能分组仓：**self-ue**
 
 - `unreal-blueprint-to-cpp-project`
 - `unreal-button-migration-checklist`
-- `unreal-class-migration-bridge`
 - `unreal-cmd`
 - `unreal-code-created-widget-pitfalls`
 - `unreal-commonui-button-dev`
