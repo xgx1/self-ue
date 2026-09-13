@@ -8,7 +8,6 @@ DSH 技能分组仓：**self-ue**
 
 ## 内容
 
-- `unreal-artist-zip-intake`
 - `unreal-blueprint-to-cpp-project`
 - `unreal-button-migration-checklist`
 - `unreal-class-migration-bridge`
