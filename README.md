@@ -12,6 +12,7 @@ DSH 技能分组仓：**self-ue**
 - `unreal-button-migration-checklist`
 - `unreal-cmd`
 - `unreal-code-created-widget-pitfalls`
+- `unreal-common-ui`
 - `unreal-commonui-button-dev`
 - `unreal-create-project-starter-content`
 - `unreal-dev-http`
@@ -28,8 +29,13 @@ DSH 技能分组仓：**self-ue**
 - `unreal-project-context`
 - `unreal-skeletal-orbit-attack`
 - `unreal-uasset-ref-scan`
+- `unreal-umg-binding`
 - `unreal-umg-bindwidget-default`
+- `unreal-umg-input`
 - `unreal-umg-item-button-wiring`
+- `unreal-umg-lifecycle`
+- `unreal-umg-lists`
+- `unreal-umg-mvvm`
 - `unreal-unrealmcp-asset-surgery`
 - `unreal-vr-button-click-fix`
 - `unreal-vr-dialog-world-mounting`
