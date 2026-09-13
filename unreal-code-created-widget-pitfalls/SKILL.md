@@ -1,11 +1,19 @@
 ---
 name: unreal-code-created-widget-pitfalls
-description: UE 项目 C++ 代码动态创建 UMG/CommonUI 按钮与弹窗时的三个陷阱：RootWidget 绑定、AddToViewport、WidgetTree 守卫
+description: UE 界面首选 UMG 蓝图资产驱动（C++ 不建树）；万不得已用 C++ 动态创建 UMG/CommonUI 按钮与弹窗时的陷阱：RootWidget 绑定、AddToViewport、WidgetTree 守卫
 ---
 
 # UE 代码创建 UMG 控件陷阱
 
-适用：Unreal 项目里用 `CreateWidget`/`NewObject` 在 C++ 动态创建按钮、弹窗，或 NativeConstruct 里动态补控件时。
+适用：Unreal 项目里**不得不**用 `CreateWidget`/`NewObject` 在 C++ 动态创建按钮、弹窗，或 NativeConstruct 里动态补控件时。
+
+## 先问一句：这个界面非要用 C++ 建吗？
+
+玩家看得见的文本、按钮、面板、遮罩、排版**一律放 UMG 蓝图（WBP 资产）**，C++ 只做三件事：按控件名取控件（`BindWidget` 或 `WidgetTree->FindWidget`）、绑委托、驱动数据/显隐。C++ 建树的代价是实打实的：改一个文案/间距就要重编译；设计器里看不到界面，美术/设计无法迭代；同一界面「代码一份、资产一份」两个真源必然漂移；资产一缺，只能显示半成品或什么都不显示。
+
+资产驱动最小骨架：`TSoftClassPtr<T>` UPROPERTY 指向 `WBP_X.WBP_X_C` → `LoadSynchronous()` 失败只报 `UE_LOG(Error)` → `CreateWidget<T>(Outer, 生成类)`（**必须传 `_C` 生成类**，传 `T::StaticClass()` 得到的是没有资产控件树的空壳）。完整落地步骤、契约测试写法与迁移清点见 YellowRiverSluice 项目技能 `yellowriver-umg-blueprint-first`。
+
+**仍然该写 C++ 界面的场合**：给引擎/编辑器写的 Slate 工具界面（`SCompoundWidget` 家族没有 WBP 可选）；列表条目按需生成、CommonUI 按钮自愈这类运行期补齐。下面的陷阱就是为这些场合写的。
 
 ## 陷阱 1：代码创建的 CommonButton 点击全死
 **症状**：`CreateWidget<UMyButtonBase>` 创建的按钮可见性正常但点击无响应、ButtonLabel 文本不渲染。

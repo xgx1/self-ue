@@ -55,6 +55,9 @@ description: UE5 UMG 中 BindWidget 默认用必选，仅当明确说可选才�
 2. 扫 uasset 二进制确认 WBP 实际控件名：`grep -a -oE "控件名" <Project>/Content/UI/xxx.uasset`。
 
 ### 修复（三选）
+
+> 顺序有讲究：**A（C++ 兜底创建）是最后手段**。项目若约定「界面一律 UMG 蓝图」（如 YellowRiverSluice，见技能 `yellowriver-umg-blueprint-first`），优先把控件补进 WBP（C 路线，无头 python / 编辑器 MCP），其次按名取（B）；C++ 兜底会在资产之外造出第二个真源。
+
 **A. C++ 兜底创建**（按钮/输入框，WBP 缺控件）：
 ```cpp
 // NativeConstruct
