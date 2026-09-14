@@ -12,7 +12,7 @@ description: "在运行中的 UE 编辑器里用官方 ModelContextProtocol 工�
 - 编辑器以 `-ExecCmds="ModelContextProtocol.StartServer"` 启动，HTTP `127.0.0.1:8000/mcp`，需 `Mcp-Session-Id` 头 + `notifications/initialized`；一个 python 驱动脚本（POST JSON-RPC，剥 SSE `data:` 行）全程够用。
 - 偶发绑定失败（日志 `HttpListener unable to bind` 且端口无占用）：插件内部 Start/Stop 时序问题，**重启编辑器即恢复**，不要死磕。
 - `list_toolsets` 输出会被驱动截断；完整工具集列表要自己重发原始请求解析。
-- **PIE 内交互：Slate 注入不够用，但系统级注入能全链路跑通**（2026-09-14 实测修正，此前"交互验收只能交给用户"的结论已过时）。`Click` 对 PIE 内 UMG 返回值真假不定、`OnClicked` 通常不触发，且**游戏 UMG 不在无障碍树里**（`Snapshot` 只返回几层全屏 image）→ Slate 点击最多落在视口正中。正解：**xdotool 系统级鼠标/键盘注入**（真实 UI 路径）+ Slate 截图观察。要点：点前**校验指针下的窗口**等于 PIE 窗口（没有这道守卫时误击别的窗口会被误判成产品 bug）；无 WM 的 Xwayland 上要 `windowlower 遮挡者 + windowraise PIE`（单独 raise 常无效）；**窗口会移动/改尺寸、面板会因内容平移，坐标只能对刚截的那张图有效**。完整规程见 `unreal-editor-mcp-ops` 的 references/ue-simulation-decisions.md。
+- **PIE 内交互：优先 Slate ref 路径**（2026-09-14 UE 5.8 实测修正）。根 `Snapshot` 会列出 PIE 浮窗，对它再 `Snapshot` 就能读到游戏按钮/输入框的 ref，`Click`/`Type`/`PressKey` 直接生效——干净会话实测 3 轮往返 6/6（页面整页切换）。此前"游戏 UMG 不在无障碍树里、Click 不触发 OnClicked、只能落在视口正中"的结论已作废：那是**用根 ref/视口 image 取样**加上**会话被系统级注入污染**得出的。注意：`Click` 返回 true ≠ 生效，用"读控件树判当前页面"验证；页面切换后旧 ref 全失效，动作前重新 Snapshot。只有 ref 够不着的地方（3D 视口内的世界坐标点击、拖到世界空间）才降到系统级注入——**注入会污染 PIE 输入状态**（之后连 ref 点击都退化成"返回 true 而无效果"，需 StopPIE/StartPIE 复位）；Wayland 工具链（hyprctl 几何/置顶 + ydotool 鼠标 + wtype 键盘 + grim 截图，且**移动与点击必须同一设备**）与坐标纪律见 `unreal-editor-mcp-ops` 的 references/ue-simulation-decisions.md。
 
 ## 参数风格速记（工具集之间不统一，先 describe 再调）
 
