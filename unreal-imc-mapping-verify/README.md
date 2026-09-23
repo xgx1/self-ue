@@ -37,7 +37,7 @@ export UE_ROOT=/home/sx/projects/unrealengine/ue5.8
 ## 前置条件
 
 - Build.cs 需要 `InputCore`（`FKey::GetFName` 链接）+ `EnhancedInput`。
-- 引擎根 `$UE_ROOT`：本机源码检出 `/home/sx/projects/unrealengine/ue5.8`（`/home/sx/UnrealEngine` 只是入口，别用）；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。确认：`ls "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd"`。
+- 引擎根 `$UE_ROOT`：本机源码检出 `/home/sx/projects/unrealengine/ue5.8`（旧入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除）；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。确认：`ls "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd"`。
 - 项目输入规范：**必须 Enhanced Input**（`UInputMappingContext` + `UInputAction`，PlayerController 用 `UEnhancedInputComponent` 绑定，`UEnhancedInputLocalPlayerSubsystem` 添加 Mapping Context）；**禁止**旧的 `InputComponent->BindAction("ActionName", ...)` 字符串绑定。
 
 ## 注意事项 / 已知坑

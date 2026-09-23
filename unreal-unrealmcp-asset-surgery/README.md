@@ -51,7 +51,7 @@ export UE_ROOT=/home/sx/projects/unrealengine/ue5.8
 ## 前置条件
 
 - 项目含 UnrealMCP 插件，且编辑器在运行（前三条路径的前提）。
-- `$UE_ROOT` 用真实源码检出路径：本机 `/home/sx/projects/unrealengine/ue5.8`；注意 `/home/sx/UnrealEngine` 只是链了部分目录的入口，安装版通常在 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。先确认：
+- `$UE_ROOT` 用真实源码检出路径：本机 `/home/sx/projects/unrealengine/ue5.8`（旧兼容入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除，不要再用）；安装版通常在 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。先确认：
 
 ```bash
 ls "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor"

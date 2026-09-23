@@ -42,7 +42,7 @@ open(out, 'w').write('\n'.join(lines) + '\n')
 
 ### 2. 打包
 
-引擎根用 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`（注意 `/home/sx/UnrealEngine` 只是链了部分目录的入口，别当 `$UE_ROOT`）；安装版通常形如 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。确认：`ls "$UE_ROOT/Engine/Binaries/Linux/UnrealPak"`。
+引擎根用 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`（旧兼容入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除，不要用它当 `$UE_ROOT`）；安装版通常形如 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。确认：`ls "$UE_ROOT/Engine/Binaries/Linux/UnrealPak"`。
 
 #### Linux（bash）
 ```bash

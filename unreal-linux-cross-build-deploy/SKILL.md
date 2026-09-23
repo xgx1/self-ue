@@ -12,7 +12,7 @@ description: UE5 源码引擎交叉编译 Linux Server + unrealcli 部署：Linu
 - **A. Linux 本机原生构建（当前主力）**：本机 Arch + 源码引擎直接 `Build.sh <Project>Server Linux <Config>`，不需要 `LINUX_MULTIARCH_ROOT`、不需要交叉工具链、不需要 Windows；产物就是本机 Linux 二进制，第 4 节起的远程部署照旧。见各节 **Linux（bash）**。
 - **B. Windows 交叉编译（历史路径，保留）**：Windows 源码引擎构建 Linux Server 并部署到远程（`<RemoteIP>` 实证，2026-08-05）。见各节 **Windows（PowerShell）**。
 
-占位符约定：`<Project>` = 项目名（如 `<Project>.uproject`、`<Project>Server` 目标名），`<project>` = 小写项目名（路径与 PM2 进程名用），`<RemoteIP>` = 远程服务器 IP，`<user>` = 远程非 root 运行用户。引擎根用 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`（UE 5.8；`/home/sx/UnrealEngine` 只是链了部分目录的入口，脚本里的 `dirname $0/../../..` 会算错引擎根，**请用真实路径**）。
+占位符约定：`<Project>` = 项目名（如 `<Project>.uproject`、`<Project>Server` 目标名），`<project>` = 小写项目名（路径与 PM2 进程名用），`<RemoteIP>` = 远程服务器 IP，`<user>` = 远程非 root 运行用户。引擎根用 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`（UE 5.8；旧兼容入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除；即便重建这类入口，脚本里的 `dirname $0/../../..` 也会算错引擎根，**请用真实路径**）。
 
 工具链版本以 `"$UE_ROOT/Engine/Config/Linux/Linux_SDK.json"` 的 `MainVersion` 为准（本机当前 `v26_clang-20.1.8-rockylinux8`）——下文出现的 `v25_clang-18.1.0-rockylinux8` 是当时 Windows 侧的记录，别照抄。
 
@@ -41,7 +41,7 @@ description: UE5 源码引擎交叉编译 Linux Server + unrealcli 部署：Linu
 `<MainVersion>` 取自 `Engine/Config/Linux/Linux_SDK.json`。Linux 主机上 clang 可执行名是 `bin/clang++`（`.exe` 后缀只对 Windows 主机——同文件 `IsValidClangPath()`）。
 
 ```bash
-export UE_ROOT=/home/sx/projects/unrealengine/ue5.8        # 真实路径，别用 /home/sx/UnrealEngine 入口
+export UE_ROOT=/home/sx/projects/unrealengine/ue5.8        # 真实路径（/home/sx/UnrealEngine 旧入口已删除）
 cat "$UE_ROOT/Engine/Config/Linux/Linux_SDK.json"          # 看 MainVersion（本机当前 v26_clang-20.1.8-rockylinux8）
 "$UE_ROOT/Engine/Build/BatchFiles/Linux/SetupToolchain.sh" # in-tree SDK 缺失时：按 Linux_SDK.json 下载解包到上面的路径
 ```

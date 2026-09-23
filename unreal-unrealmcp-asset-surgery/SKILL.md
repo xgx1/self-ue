@@ -11,7 +11,7 @@ description: UE 项目内 UnrealMCP 插件 TCP 协议 + 无头 python 对 .uasse
 
 ## 前置
 
-- 项目含 UnrealMCP 插件且编辑器在运行（引擎根用 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`，注意 `/home/sx/UnrealEngine` 只是链了部分目录的入口；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。确认 `ls "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor"`）
+- 项目含 UnrealMCP 插件且编辑器在运行（引擎根用 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`（旧兼容入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除，不要再用）；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。确认 `ls "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor"`）
 
 ### Linux（bash）
 ```bash

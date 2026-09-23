@@ -22,7 +22,7 @@
 本机原生构建**不必设** `LINUX_MULTIARCH_ROOT`——UBT 未读到该变量时回退到 in-tree SDK：`$UE_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/<MainVersion>/x86_64-unknown-linux-gnu`。
 
 ```bash
-export UE_ROOT=/home/sx/projects/unrealengine/ue5.8        # 真实路径，别用 /home/sx/UnrealEngine 入口
+export UE_ROOT=/home/sx/projects/unrealengine/ue5.8        # 真实路径（/home/sx/UnrealEngine 旧入口已删除）
 cat "$UE_ROOT/Engine/Config/Linux/Linux_SDK.json"          # 看 MainVersion（本机当前 v26_clang-20.1.8-rockylinux8）
 "$UE_ROOT/Engine/Build/BatchFiles/Linux/SetupToolchain.sh" # in-tree SDK 缺失时：按 Linux_SDK.json 下载解包到上面的路径
 ```

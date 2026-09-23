@@ -28,7 +28,7 @@
 ls "$UE_ROOT/Engine/Binaries/Linux/UnrealPak"
 ```
 
-- 本机源码检出真实路径是 `/home/sx/projects/unrealengine/ue5.8`（UE 5.8）；安装版引擎根通常形如 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。注意 `/home/sx/UnrealEngine` 只是链了部分目录的入口，`Engine/Binaries/` 在那边是空的，**别用它当 `$UE_ROOT`**；本机该源码检出尚未编译引擎，先构建引擎才有这个二进制
+- 本机源码检出真实路径是 `/home/sx/projects/unrealengine/ue5.8`（UE 5.8）；安装版引擎根通常形如 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`。旧兼容入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除，**不要用它当 `$UE_ROOT`**；本机该源码检出尚未编译引擎，先构建引擎才有这个二进制
 
 **Linux（bash）**
 

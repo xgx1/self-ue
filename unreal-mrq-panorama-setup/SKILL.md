@@ -107,7 +107,7 @@ uproject 启用 OpenXR 插件、`DefaultEngine.ini` `[/Script/Engine.Engine] bSt
 引擎 FeaturePacks/ 缺 StarterContent.upack 时启动导入失败弹窗：
 - 从项目现有资产打包：响应文件每行 `"源文件绝对路径" "../../../ProjectName/Content/相对路径"`（挂载点须含 `/Content/`，UPackFactory 按此解析导入目标）
 - **响应文件不能有注释行**（`;` 开头）→ UnrealPak 索引断言崩溃
-- 打包与验证（引擎根 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`，注意 `/home/sx/UnrealEngine` 只是链了部分目录的入口；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`）
+- 打包与验证（引擎根 `$UE_ROOT` 占位：本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`；旧兼容入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除，不要再用。安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`）
 
 ### Linux（bash）
 ```bash

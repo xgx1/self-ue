@@ -27,7 +27,7 @@ uasset 是二进制但 FName 以明文存储。两种方法：
 
 ## 运行
 
-必须带 `-unattended`（否则卡 FWaitForInteractiveFrameRate）。引擎根用 `$UE_ROOT` 占位（本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`，注意 `/home/sx/UnrealEngine` 只是链了部分目录的入口；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`，确认 `ls "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd"`）：
+必须带 `-unattended`（否则卡 FWaitForInteractiveFrameRate）。引擎根用 `$UE_ROOT` 占位（本机源码检出真实路径 `/home/sx/projects/unrealengine/ue5.8`；旧兼容入口 `/home/sx/UnrealEngine` 已于 2026-09-23 删除，不要再用；安装版通常 `~/Epic/UE_5.7` 或 `/opt/UnrealEngine`，确认 `ls "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd"`）：
 
 ### Linux（bash）
 ```bash
