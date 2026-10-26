@@ -1,6 +1,6 @@
 ---
 name: unreal-imc-headless-surgery
-description: UE 项目 Enhanced Input IMC/InputAction 无头手术全流程：查看（uasset 二进制解析）、验证（自动化契约测试权威方法）、程序化修改（先删后加 set+map_key+save、独立进程 dump 验证）、IA 创建与 CDO 接线、PICO 输入键陷阱（2D 键 Y 分量 SDK bug、legacy 键值绕法）、按键冲突分流。排查手柄轴输入失效、改 IMC 映射时使用。
+description: UE 项目 Enhanced Input IMC/InputAction 无头手术全流程：查看（uasset 二进制解析）、验证（自动化契约测试权威方法）、程序化修改（先删后加 set+map_key+save、独立进程 dump 验证）、IA 创建与 CDO 接线、PICO 输入键陷阱（2D 键 Y 分量 SDK bug、legacy 键值绕法）、按键冲突分流、输入系统规范与 IMC 生命周期。排查手柄轴输入失效、改 IMC 映射、验证/程序化修复输入映射时使用。
 version: 1.0.0
 ---
 
@@ -112,9 +112,24 @@ for (const FName& KeyName : RightStickYNames) {
 
 DumpImc.py（IMC dump）、PatchImc.py（批量加映射+去重）、SetupDebugInputs.py（建 IA+IMC+CDO 全模式）、DumpBp.py（CDO 属性 dump）——模式已并入本卡各节代码块。
 
+## 八、输入系统规范与 IMC 生命周期（项目约定）
+
+- **必须 Enhanced Input**：`UInputMappingContext` + `UInputAction` 配置，PlayerController 用 `UEnhancedInputComponent` 绑定，Mapping Context 经 `UEnhancedInputLocalPlayerSubsystem` 添加。
+- **禁止**旧字符串绑定 `InputComponent->BindAction("ActionName", ...)`。
+- 打开 UI：移除 UI 相关 IMC（或调优先级），否则 UI 操作会同时打进游戏输入。
+- 关闭 UI：重新添加 IMC，**先 Remove 再 Add**：
+
+```cpp
+Subsystem->RemoveMappingContext(SettingsMappingContext);
+Subsystem->AddMappingContext(SettingsMappingContext, 50);
+```
+
+- UI 侧输入模式切换（`FInputModeGameAndUI` / `UIOnly` / `GameOnly`）见 `unreal-code-created-widget-pitfalls`。
+
 ## Related Skills
 
 - `unreal-input-system` — Enhanced Input C++ 知识库
 - `unreal-python` — 无头 python 总纲
 - `unreal-testing-debugging` — 自动化测试体系
 - `unreal-cmd` — 命令行包装
+- `unreal-official-mcp-surgery` — 用官方 MCP 工具集做资产/控件手术（另一条改法）
