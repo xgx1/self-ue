@@ -18,16 +18,11 @@ DSH 技能分组仓：**self-ue**
 - `unreal-dev-http`
 - `unreal-editor-toolbar-button`
 - `unreal-featurepack-upack-rebuild`
-- `unreal-fix-simulatedproxy-teleport-interpolation`
-- `unreal-imc-mapping-verify`
 - `unreal-linux-cross-build-deploy`
-- `unreal-module-build`
-- `unreal-monolithic-plugin-symbol-conflict`
+- `unreal-module-fanout`
 - `unreal-mrq-panorama-setup`
 - `unreal-multiplayer-replication-debug`
 - `unreal-official-mcp-surgery`
-- `unreal-project-context`
-- `unreal-skeletal-orbit-attack`
 - `unreal-uasset-ref-scan`
 - `unreal-umg-binding`
 - `unreal-umg-bindwidget-default`
@@ -36,7 +31,6 @@ DSH 技能分组仓：**self-ue**
 - `unreal-umg-lifecycle`
 - `unreal-umg-lists`
 - `unreal-umg-mvvm`
-- `unreal-unrealmcp-asset-surgery`
 - `unreal-vr-button-click-fix`
 - `unreal-vr-dialog-world-mounting`
 - `unreal-vr-mouse-debug-click`
